@@ -3,7 +3,7 @@ const Tour = require('../model/tourModel');
 
 
 
-
+//handles request for the list of tours
 async function getTours(request, response)
 {
     try {
