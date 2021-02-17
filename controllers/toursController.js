@@ -29,6 +29,7 @@ async function getTours(request, response)
 
 }
 
+//handles a single tour request
 async function getTour(request, response)
 {
    

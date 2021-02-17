@@ -24,7 +24,7 @@ app.use((request,response,next)=>{
    
 });
 
-//defining routes
+//defining routes and the base url 
 app.use('/api/v1/users',userRouter); 
 app.use('/api/v1/tours',tourRouter); 
 

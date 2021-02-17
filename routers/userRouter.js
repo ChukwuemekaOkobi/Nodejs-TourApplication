@@ -4,7 +4,7 @@ const controller = require('../controllers/userController');
 const router = express.Router(); 
 
 
-router.route('/')
+router.route('/') //home path of the different requests
 .get(controller.getUsers)
 .post(controller.addUser)
 

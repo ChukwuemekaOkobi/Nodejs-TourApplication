@@ -3,6 +3,7 @@ const controller = require('../controllers/toursController');
 
 const router = express.Router(); 
 
+//middleware for route parameter checks 
 // router.param('id', (request, response, next,val) => {
 //     const id = +val;
 
@@ -15,7 +16,7 @@ const router = express.Router();
 //     next();
 // })
 
-//router middle ware 
+//router middle ware to check the resquest body
 // function checkBody(request, response, next) 
 // {
 //     if(!request.body.name )
@@ -38,7 +39,7 @@ const router = express.Router();
 router.route('/')
 .get(controller.getTours)
 .post(controller.addTour); 
-//.post(checkBody, controller.addTour) //chain middle ware
+//.post(checkBody, controller.addTour) //chain middle ware check body is executed first
 
 router.route('/:id')
 .get(controller.getTour)
