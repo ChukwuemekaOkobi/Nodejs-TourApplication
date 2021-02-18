@@ -50,6 +50,9 @@ function aliasTop5tours (request, response, next)
 router.route('/get-top5-tours')
 .get(aliasTop5tours,controller.getTours);
 
+router.route('/stats')
+.get(controller.getTourStats);
+
 router.route('/')
 .get(controller.getTours)
 .post(controller.addTour); 
