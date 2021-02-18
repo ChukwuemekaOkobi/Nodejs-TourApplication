@@ -1,14 +1,25 @@
 const fs = require('fs'); 
 const Tour = require('../model/tourModel');
+const APIQueryFeatures = require('../utility/apiQuery');
+
 
 
 
 //handles request for the list of tours
 async function getTours(request, response)
 {
+    
     try {
+        
+     let tourQuery = new APIQueryFeatures(Tour.find(), request.query); 
 
-        let tours  = await Tour.find(); 
+       tourQuery = tourQuery.filter()
+                    .sort()
+                    .limit()
+                    .paginate(); 
+                        
+       let tours = await tourQuery.query; 
+
 
         response.status(200).json({
             status: 'success', 
@@ -20,7 +31,8 @@ async function getTours(request, response)
 
     } catch (error) {
         
-    response.status(404).json({
+        console.log(error);
+        response.status(404).json({
         status: 'failed', 
         message: "Could not load tours data"
       });  

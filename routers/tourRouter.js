@@ -34,7 +34,21 @@ const router = express.Router();
 //     next()
 // }
 
+function aliasTop5tours (request, response, next)
+{
+    request.query = 
+    {
+        limit:'5', 
+        sort: '-ratingsAverage, price', 
+        fields: 'name, price, ratingsAverage, summary, difficulty'
+    }; 
 
+    next(); 
+}
+
+
+router.route('/get-top5-tours')
+.get(aliasTop5tours,controller.getTours);
 
 router.route('/')
 .get(controller.getTours)
