@@ -1,4 +1,6 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
+const validator = require('validator');
 
 //Define Tour schema 
 const tourSchema = new mongoose.Schema({
@@ -6,15 +8,21 @@ const tourSchema = new mongoose.Schema({
         type: String, 
         required: [true,"tour must have name"], 
         unique: true,
-        trim: true
+        trim: true,
+     //   validate:[validator.isAlpha, "Tour name must only be character"]
     }, 
+    slug: {
+        type:String
+    },
     duration: {
        type: Number, 
        required: [true, "Tour must have a duration"]
     },
     ratingsAverage: {
             type: Number, 
-            default: 0.0
+            default: 0.0,
+            min: [1,"Rating must be greater than or equal to 1"],
+            max: [5,"Rating must be less than or equal to 5"]
     }, 
     ratingsQuantity: {
         type: Number, 
@@ -25,7 +33,16 @@ const tourSchema = new mongoose.Schema({
         required: [true, "price is required"]
     }, 
     priceDiscount: {
-        type:Number
+        type:Number,
+        validate: 
+        {
+          validator: function(value)
+          { 
+            //this is only used when creating a new document
+            return val < (this.price * 0.4);
+          },
+          message: 'Discount price ({VALUE}) should be below 40% of the main price'
+        } 
     },
     maxGroupSize: {
         type: Number, 
@@ -34,7 +51,8 @@ const tourSchema = new mongoose.Schema({
     }, 
     difficulty: {
         type: String, 
-        required: [true, "difficulty must be specified"]
+        required: [true, "difficulty must be specified"],
+        enum: {values: ['easy','medium','difficult'],message: "difficulty is not valid"}
     }, 
     
     summary: {
@@ -62,6 +80,25 @@ const tourSchema = new mongoose.Schema({
     startDates: {
         type:[Date]
     }
+},
+{
+    toJSON: {virtuals: true },
+    toObject: { virtuals: true}
+}
+); 
+
+tourSchema.virtual('durationWeeks').get(function() 
+{
+    return this.duration / 7
+});
+
+//chain moogoose middle ware
+//pre or post, document, query, aggregate middle ware
+tourSchema.pre('save',function(next)
+{
+  this.slug = slugify(this.name, { lower: true});
+
+  next();
 }); 
 
 //create tour model

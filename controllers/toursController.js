@@ -15,7 +15,7 @@ async function getTours(request, response)
 
        tourQuery = tourQuery.filter()
                     .sort()
-                    .limit()
+                    .limitFields()
                     .paginate(); 
                         
        let tours = await tourQuery.query; 
@@ -155,7 +155,8 @@ async function getTourStats(request, response)
   try {
       const stats = await Tour.aggregate(
           [
-           {   $match: {ratingsAverage: { $gte:4.5}  }
+           {   
+               $match: {ratingsAverage: { $gte:4.0}  }
            },
            {
                $group: {
@@ -169,11 +170,12 @@ async function getTourStats(request, response)
                }
            }, 
             {
-                $sort: { $avgPrice: 1}
-            }, 
-            {
-                $match: {_id: {$ne: 'EASY'}}
+                $sort: { avgPrice: 1}
             }
+            // {
+            //     $match: {_id: {$ne: 'EASY'}}
+            // }
+
           ]
       )
 
@@ -185,8 +187,67 @@ async function getTourStats(request, response)
     });
 
   } catch (error) {
-      
+      console.log(error)
+    response.status(400).json({
+        status: 'failed', 
+        message: "Could not get stats"
+      }); 
   }
 }
 
-module.exports = { getTours,addTour, getTour, updateTour, deleteTour, getTourStats};
+async function getMonthlyPlan(request, response)
+{
+    try {
+        const year = +request.params.year; 
+
+        const plan = await Tour.aggregate(
+            [
+               {
+                   $unwind: '$startDates'
+               },
+               {
+                   $match: { 
+                       startDates: {
+                           $gte: new Date(`${year}-01-01`),
+                           $lte: new Date(`${year+1}-01-01`)
+                       }
+                   }
+               },
+               {
+                   $group: {
+                       _id: {$month: '$startDates'},
+                       numTour: {$sum:1},
+                       tours: {$push: '$name'}
+                   }
+               },
+               {
+                   $addFields: { month: '$_id'}
+               },
+               {
+                   $project: { _id:0}
+               },
+               {
+                   $sort: { numTour:-1}
+               }
+            ]
+        );
+
+        response.status(200).json({
+            status: "success", 
+            data: {
+             plan
+            } 
+        });
+
+    } catch (error) {
+        console.log(error);
+        response.status(400).json({
+            status: 'failed', 
+            message: "Could not get monthly plan "
+          }); 
+    }
+}
+
+
+
+module.exports = { getTours,addTour, getTour, updateTour, deleteTour, getTourStats, getMonthlyPlan};

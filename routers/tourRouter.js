@@ -53,6 +53,9 @@ router.route('/get-top5-tours')
 router.route('/stats')
 .get(controller.getTourStats);
 
+router.route('/get-monthly-plan/:year')
+.get(controller.getMonthlyPlan);
+
 router.route('/')
 .get(controller.getTours)
 .post(controller.addTour); 

@@ -21,7 +21,7 @@ class APIQueryFeatures
 
         this.query =  this.query.find(queryObj); //applyfilter
 
-        return this; 
+        return this;  //to enable method chaining 
     }
 
     sort()
@@ -43,7 +43,7 @@ class APIQueryFeatures
           return this; 
     }
 
-    limit()
+    limitFields()
     {
         //field limiting
         //query = Query.select('name price duration') 
@@ -65,10 +65,9 @@ class APIQueryFeatures
     paginate()
     {
         //pagination 
-        const page = this.requestQuery.page * 1 || 1;
-        const limit = this.requestQuery.limit * 1 || 1; 
+        const page = +this.requestQuery.page  || 1;
+        const limit = +this.requestQuery.limit  || 9; 
         const skip = (page-1) * limit; 
-        //const tourcount = await Tour.countDocuments(); 
    
         this.query = this.query.skip(skip).limit(limit); 
     
