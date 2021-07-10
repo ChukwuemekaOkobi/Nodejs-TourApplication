@@ -49,4 +49,13 @@ function readFile(filename){
         })
     });
 }
-module.exports = {writeDataToFile, getPostData, readFile}
+
+//general try catch function 
+const catchAsync = func => {
+  
+    return (req, res, next) => {
+        func(req, res, next).catch(next);
+    }
+    
+}
+module.exports = {writeDataToFile, getPostData, readFile, catchAsync}

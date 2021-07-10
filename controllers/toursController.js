@@ -1,77 +1,59 @@
 const fs = require('fs'); 
 const Tour = require('../model/tourModel');
 const APIQueryFeatures = require('../utility/apiQuery');
+const {catchAsync} = require ("../utility/utils");
+const AppError = require("../utility/appError");
 
 
 
 
 //handles request for the list of tours
-async function getTours(request, response)
-{
-    
-    try {
-        
-     let tourQuery = new APIQueryFeatures(Tour.find(), request.query); 
+const getTours  = catchAsync(async (request, response, next) => {
 
-       tourQuery = tourQuery.filter()
-                    .sort()
-                    .limitFields()
-                    .paginate(); 
-                        
-       let tours = await tourQuery.query; 
+    let tourQuery = new APIQueryFeatures(Tour.find(), request.query); 
+
+    tourQuery = tourQuery.filter()
+                 .sort()
+                 .limitFields()
+                 .paginate(); 
+                     
+    let tours = await tourQuery.query; 
 
 
-        response.status(200).json({
-            status: 'success', 
-            result: tours.length,
-            data: {
-                tours
-            }
-          });  
+     response.status(200).json({
+         status: 'success', 
+         result: tours.length,
+         data: {
+             tours
+         }
+       });  
+});
 
-    } catch (error) {
-        
-        console.log(error);
-        response.status(404).json({
-        status: 'failed', 
-        message: "Could not load tours data"
-      });  
-    }
-  
 
-}
 
 //handles a single tour request
-async function getTour(request, response)
+const getTour =  catchAsync(async (request, response,next) =>
 {
-   
-    try {
-
         let tour = await Tour.findById(request.params.id); 
 
+        if(!tour)
+        {
+            let error = new AppError('No tour found with the id',404);
+           return next(error);
+
+        }
         response.status(200).json({
             status: 'success', 
             data: {
                 tour
             }
-          });  
-
-    } catch (error) {
-        
-    response.status(404).json({
-        status: 'failed', 
-        message: "Could not load tour data"
-      });  
-    }
-  
+          });   
      
-}
+});
 
 
-async function addTour(request, response)
+const addTour = catchAsync (async function (request, response,next) 
 {
-   
-    try {
 
         let tour = request.body; 
 
@@ -84,29 +66,25 @@ async function addTour(request, response)
             }
           });  
         
-    } catch (error) {
-        
-        response.status(400).json({
-            status: 'failed', 
-            message: "Invalid data"
-          });  
-    }
-
-}
+});
 
 
-async function updateTour(request, response)
+const updateTour = catchAsync (async function (request, response,next)
 {
 
-    let id = request.params.id; 
+        let id = request.params.id; 
 
-    try{
-        
         let update = request.body; 
 
         let newTour = await Tour.findByIdAndUpdate(id,update, {new: true, runValidators: true}); 
 
+        
+        if(!newTour)
+        {
+            let error = new AppError('No tour found with the id',404);
+           return next(error);
 
+        }
         response.status(200).json({
             status: "success", 
             data: {
@@ -114,45 +92,30 @@ async function updateTour(request, response)
             }
         });
 
-    }catch(err)
-    {
-        response.status(400).json({
-            status: 'failed', 
-            message: "Invalid data"
-          }); 
-    }
-
-}
+});
 
 
-async function deleteTour(request, response)
+const deleteTour = catchAsync (async function (request, response,next)
 {
-    let id = request.params.id; 
+        let id = request.params.id; 
+        var tour = await Tour.findByIdAndDelete(id); 
 
-    try{
-        await Tour.findByIdAndDelete(id); 
+        if(!tour)
+        {
+            let error = new AppError('No tour found with the id',404);
+           return next(error);
 
+        }
         response.status(204).json({
             status: "success", 
             data: null
         });
-
-    }
-    catch(err)
-    {
-        response.status(400).json({
-            status: 'failed', 
-            message: "Could not delete tour"
-          }); 
-    }
-
-   
-}
+});
 
 
-async function getTourStats(request, response)
+const getTourStats = catchAsync (async function(request, response,next)
 {
-  try {
+  
       const stats = await Tour.aggregate(
           [
            {   
@@ -186,14 +149,7 @@ async function getTourStats(request, response)
         }
     });
 
-  } catch (error) {
-      console.log(error)
-    response.status(400).json({
-        status: 'failed', 
-        message: "Could not get stats"
-      }); 
-  }
-}
+});
 
 async function getMonthlyPlan(request, response)
 {
@@ -209,7 +165,7 @@ async function getMonthlyPlan(request, response)
                    $match: { 
                        startDates: {
                            $gte: new Date(`${year}-01-01`),
-                           $lte: new Date(`${year+1}-01-01`)
+                           $lt: new Date(`${year+1}-01-01`)
                        }
                    }
                },
