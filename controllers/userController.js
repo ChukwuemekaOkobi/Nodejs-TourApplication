@@ -4,6 +4,7 @@ const utils = require('../utility/utils');
 const {catchAsync} = require ("../utility/utils");
 
 const User = require('../model/userModel');
+const AppError = require('../utility/appError');
 
 
 function getUsersModel()
@@ -134,4 +135,55 @@ function deleteUser(request, response)
       })
 }
 
-module.exports = { getUsers,addUser, getUser, updateUser, deleteUser};
+
+const UpdateProfile = catchAsync(async function(request, response, next){
+ 
+    var model = filterObj(request.body, 'name','email');
+
+    if(model.password || model.passwordConfirm){
+        let error = new AppError('improper route for password', 400); 
+
+        return next(error); 
+    }
+
+    const userUpdate = await User.findByIdAndUpdate(request.user.id,model,{
+        new:true,
+        runValidators:true,
+    });
+
+
+     response.status(200).json({
+         status:'success',
+         data: {
+             user:userUpdate
+         }
+     })
+
+});
+
+const DeleteProfile = catchAsync(async function (request, response, next){
+
+         await User.findByIdAndUpdate(request.user.id, {active:false});
+
+
+         return response.status(204)
+         .json({
+             data:null
+         })
+});
+
+
+function filterObj(obj, ...fields){
+
+    let newObj = {};
+    Objects.keys(obj).forEach(el => {
+        if(fields.includes(el))
+        {
+          newObj[el] = obj[el];
+        }
+    })
+
+    return newObj; 
+}
+
+module.exports = { getUsers,addUser, getUser, updateUser, deleteUser, DeleteProfile, UpdateProfile};

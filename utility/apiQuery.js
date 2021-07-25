@@ -32,7 +32,6 @@ class APIQueryFeatures
           {  
               //query = tourquery.sort('price rate')
               sortby = sortby.split(',').join(' ');
-              console.log(sortby)
               this.query = this.query.sort(sortby); 
           }
           else 

@@ -8,7 +8,14 @@ router.post('/register', authcontroller.Register);
 router.post('/login', authcontroller.Login);
 
 router.post('/forgotPassword', authcontroller.ForgotPassword);
-router.post('/resetPassword', authcontroller.ResetPassword);
+router.patch('/resetPassword/:token', authcontroller.ResetPassword);
+router.patch('/updatePassword', authcontroller.UpdatePassword);
+
+
+router.route('/Profile')
+      .patch(authcontroller.Authenticate, controller.UpdateProfile);
+
+
 
 router.route('/') //home path of the different requests
 .get(controller.getUsers)

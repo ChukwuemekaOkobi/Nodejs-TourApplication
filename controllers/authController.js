@@ -3,6 +3,10 @@ const {catchAsync} = require ("../utility/utils");
 const jwt = require('jsonwebtoken'); 
 const util = require('util');
 const AppError = require('../utility/appError');
+const {sendEmail} = require('../utility/email');
+const crypto = require('crypto');
+const { model } = require('mongoose');
+
 
 
 const Authenticate = catchAsync(async function (request, response, next) {
@@ -29,10 +33,9 @@ const Authenticate = catchAsync(async function (request, response, next) {
       return  next(err);
     }
 
-    if(!user.changedPasswordAfter(user.passwordChangedAt, Valid.iat))
+    if(user.changedPasswordAfter(Valid.iat))
     {
-     
-        var err = new AppError("your are ffhsh not authorised", 401);
+        var err = new AppError("your are not authorised", 401);
         return  next(err);
     }
 
@@ -63,6 +66,34 @@ const signToken = id => {
          );
 }
 
+function createSendToken(user, statusCode, response) {
+    const token = signToken(user._id);
+
+    const cookieOptions = {
+        expires:new Date(Date.now() + (process.env.JWT_COOKIE_EXPIRES * 60 * 60 * 1000)),
+        secure:false,
+        httpOnly: true
+    }
+
+
+    if(process.env.NODE_ENV === 'production'){
+        cookieOptions.secure = true;
+    }
+
+    response.cookie('token', token, cookieOptions)
+
+    user.password = undefined;
+    
+    response.status(statusCode)
+    .json({
+        status:success, 
+        token, 
+        data:{
+            user
+        }
+    })
+}
+
 const Register = catchAsync(async function(request, response, next) {
 
     var user = request.body; 
@@ -75,16 +106,8 @@ const Register = catchAsync(async function(request, response, next) {
         role:user.role
     });
 
-    const token = signToken(newUser._id);
--
-    response.status(201)
-            .json({
-                status: 'success', 
-                data:{
-                    user:newUser
-                },
-                token
-            });
+
+    createSendToken(newUser,201,response);
 
 });
 
@@ -107,14 +130,8 @@ const Login = catchAsync(async function (request, response, next){
         let error = new AppError('invalid credentials',401);
         return next(error);
      }
-                        
-     const token = signToken(user._id);
 
-     response.status(200)
-            .json ({
-              status:'success',
-               token
-            });
+     createSendToken(user,200,response);
 });
 
 
@@ -134,18 +151,96 @@ const ForgotPassword = catchAsync( async function (request, response, next){
 
     await user.save({validateBeforeSave: false}); 
 
-    response.status(200)
-    .json ({
-      status:'success',
-      resetToken
-    });
+
+    const resetURL = `${request.protocol}://${request.get('host')}/api/v1/users/resetPassword/${resetToken}`;
+
+    const message = `Forgot password? Submit click on the link ${resetURL}`;
+
+   try{
+    await sendEmail({
+            email:user.email, 
+            subject: 'Your password reset token', 
+            message
+        })
+
+        response.status(200)
+        .json ({
+        status:'success',
+        rmessage: 'Reset Token sent to email'
+        });
+   }
+   catch (err) {
+      user.passwordResetToken = undefined; 
+      user.passwordResetExpires = undefined; 
+
+      await user.save({validateBeforeSave:false}); 
+
+      const error = new AppError('email not sent ', 400); 
+      return next(error)
+   }
+ 
 });
 
 const ResetPassword = catchAsync( async function (request, response, next){
 
+ let rtoken = request.params.token;
+ let model = request.body;
+
+ const hashedToken = crypto.createHash('sha256').update(rtoken).digest('hex');
+
+
+ const user = await User.findOne({passwordResetToken: hashedToken, 
+            passwordResetExpires: {
+                $gt: Date.now()
+            }});
+
+if(!user){
+    let error = new AppError("token is invalid", 400); 
+    return nest(error); 
+}
+
+
+user.password = model.password; 
+user.passwordConfirm = model.passwordConfirm; 
+user.passwordResetToken = undefined; 
+user.passwordResetExpires = undefined; 
+
+
+await user.save();
+
+       createSendToken(user,200,response);
+ 
+});
+
+
+const UpdatePassword = catchAsync(async function (request,response,next){
+
+   let model = request.body; 
+
+   const user = await User.findById(request.user.id)
+                          .select('+password');
+
+   if(!(await user.correctPassword(model.password, user.password))){
+
+      let error = new AppError('Password invalid', 401);
+      return next(error); 
+   }
+
+
+   user.password = model.password; 
+   user.passwordConfirm = model.passwordConfirm; 
+
+   await user.save(); 
+
+   var token = signToken(user._id);
+
+   return response.status(200)
+         .json({
+           status:'success',
+           token
+         });
 });
 
 
 
-
-module.exports = {Register, Login, Authenticate, Authorize, ForgotPassword, ResetPassword}
+module.exports = {Register, Login, Authenticate, Authorize, ForgotPassword, ResetPassword, UpdatePassword}
