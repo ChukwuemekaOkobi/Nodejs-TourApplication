@@ -21,9 +21,11 @@ app.use(express.static(path.join(__dirname,'./public'))); //serve static files
 
 //custom middle ware
 app.use((request,response,next)=>{
-   next(); 
 
-   
+    request.requestTime = new Date().toISOString();
+
+   // console.log(request.headers);
+   next(); 
 });
 
 //defining routes and the base url 
@@ -32,6 +34,7 @@ app.use('/api/v1/tours',tourRouter);
 
 //handle all routes notfound
 app.all('*', (request,response,next) => {
+    console.log("not found");
     var error = new AppError(`Can't find ${request.originalUrl}`, 404);
     next(error);
 })

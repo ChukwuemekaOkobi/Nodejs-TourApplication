@@ -1,6 +1,9 @@
 const fs = require('fs'); 
 const path = require('path'); 
 const utils = require('../utility/utils');
+const {catchAsync} = require ("../utility/utils");
+
+const User = require('../model/userModel');
 
 
 function getUsersModel()
@@ -10,42 +13,45 @@ function getUsersModel()
     return JSON.parse(tours); 
 }
 
-function getUsersAsync(){
+// function getUsersAsync(){
 
-    return new Promise((resolve, reject) => {
+//     return new Promise((resolve, reject) => {
 
-        fs.readFile(path.join(__dirname, '../resource/data/tours-simple.json'), 'utf-8', (err,data) => {
-            if(err) 
-            {
-                reject(err); 
-            }
+//         fs.readFile(path.join(__dirname, '../resource/data/tours-simple.json'), 'utf-8', (err,data) => {
+//             if(err) 
+//             {
+//                 reject(err); 
+//             }
           
-            resolve(JSON.parse(data)); 
-        })
-    });
-}
+//             resolve(JSON.parse(data)); 
+//         })
+//     });
+// }
 
 
-function getUsers(request, response)
+const getUsers = catchAsync(async function (request, response, next)
 {
-   let tours  = getUsersModel(); 
+   let users  = await User.find({});
 
     response.status(200).json({
         status: 'success', 
-        result: tours.length,
+        result: users.length,
         data: {
-            tours
+            users
         }
       });  
-}
+});
 
 function getUser(request, response)
 {
     let id = +request.params.id; 
-     
+
+
     let tours = getUsersModel();
 
     let tour = tours.find(t => t.id === id);
+
+    console.log(tour);
 
     response.status(200).json({
         status: 'success', 

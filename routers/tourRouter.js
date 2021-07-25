@@ -1,5 +1,6 @@
 const express = require('express'); 
 const controller = require('../controllers/toursController');
+const authController = require('../controllers/authController');
 
 const router = express.Router(); 
 
@@ -57,13 +58,13 @@ router.route('/get-monthly-plan/:year')
 .get(controller.getMonthlyPlan);
 
 router.route('/')
-.get(controller.getTours)
-.post(controller.addTour); 
+.get(authController.Authenticate,controller.getTours)
+.post(authController.Authenticate,controller.addTour); 
 //.post(checkBody, controller.addTour) //chain middle ware check body is executed first
 
 router.route('/:id')
 .get(controller.getTour)
-.delete(controller.deleteTour)
+.delete(authController.Authenticate, authController.Authorize('admin','lead-guide'),controller.deleteTour)
 .patch(controller.updateTour) 
 
 

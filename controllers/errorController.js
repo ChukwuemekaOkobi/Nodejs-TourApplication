@@ -22,6 +22,11 @@ function handleValidationErrorDB(err){
     return new AppError(message,400);
 }
 
+function handleJWTError(err)
+{
+    return new AppError('invalid  token, Login again', 401);
+}
+
 function SendErrorDev (err, response)
 {
     response.status(err.statusCode)
@@ -72,7 +77,7 @@ const handler = (err, request, response, next) => {
     }
     else if(env === "production")
     {
-        console.log(process.env.NODE_ENV);
+
         let error = err;
         if(err.name === 'CastError')
         {
@@ -84,6 +89,10 @@ const handler = (err, request, response, next) => {
         if(err.name === "ValidationError")
         {
             error = handleValidationErrorDB(err);
+        }
+
+        if(error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError'){
+            error = handleJWTError(err);
         }
         SendErrorProd(error,response);
         return;
