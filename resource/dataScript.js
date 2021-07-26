@@ -2,7 +2,7 @@ const dotenv = require('dotenv');
 dotenv.config({path: './config.env'});
 const connectDB = require('../db');
 const Tour = require('../model/tourModel'); 
-const utils = require('../utils'); 
+const utils = require('../utility/utils'); 
 const path = require('path')
 
 
@@ -12,7 +12,7 @@ const t = require('../')
 //read json file 
 async function importFile()
 {
-  let filename =   path.join(__dirname, './data/tours-simple.json'); 
+  let filename =   path.join(__dirname, './data/tours.json'); 
 
   try {
 

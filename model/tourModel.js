@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
 const validator = require('validator');
+const User = require('./userModel');
 
 //Define Tour schema 
 const tourSchema = new mongoose.Schema({
@@ -79,7 +80,38 @@ const tourSchema = new mongoose.Schema({
     }, 
     startDates: {
         type:[Date]
-    }
+    }, 
+    secretTour:{
+        type:Boolean, 
+        default: false
+    }, 
+    startLocation:{
+        type:{
+            type:String,
+            default:'Point',
+            enum:['Point']
+        },
+        coordinates:[Number],
+        address:String, 
+        description:String
+    },
+    locations:[{
+        type:{
+            type:String,
+            default:'Point',
+            enum:['Point']
+        },
+        coordinates:[Number],
+        address:String, 
+        description:String,
+        day:Number
+    }],
+    guides:[
+        {
+         type: mongoose.Schema.ObjectId,
+         ref: 'User'
+        }
+    ]
 },
 {
     toJSON: {virtuals: true },
@@ -100,7 +132,32 @@ tourSchema.pre('save',function(next)
 
   next();
 }); 
+tourSchema.pre(/^find/, function(next){
 
+    this.find({secretTour:{$ne: true}});
+
+    this.start = Date.now();
+    next();
+})
+tourSchema.pre(/^find/, function(next){
+
+    this.populate({
+        path:'guides',
+        select:'-__v -passwordChangedAt'
+    });
+
+    next();
+})
+
+//Embedding data
+// tourSchema.pre('save', async function(next){
+
+//   const guides =  this.guides.map(el => await User.findById(id));
+
+//   this.guides = await Promise.all(guides);
+
+//     next();
+// });
 //create tour model
 const Tour = mongoose.model('Tour',tourSchema);
 

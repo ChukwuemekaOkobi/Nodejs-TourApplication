@@ -34,7 +34,7 @@ const getTours  = catchAsync(async (request, response, next) => {
 //handles a single tour request
 const getTour =  catchAsync(async (request, response,next) =>
 {
-        let tour = await Tour.findById(request.params.id); 
+        let tour = await Tour.findById(request.params.id);
 
         if(!tour)
         {

@@ -86,7 +86,7 @@ function createSendToken(user, statusCode, response) {
     
     response.status(statusCode)
     .json({
-        status:success, 
+        status:'success', 
         token, 
         data:{
             user
@@ -123,6 +123,7 @@ const Login = catchAsync(async function (request, response, next){
 
      let user = await User.findOne({'email':email})
                            .select('+password');
+
 
      let isPassword = await user.correctPassword(password,user.password);
 

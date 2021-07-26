@@ -7,6 +7,7 @@ const morgan = require('morgan');
 const path = require('path'); 
 const userRouter = require('./routers/userRouter')
 const tourRouter = require('./routers/tourRouter');
+const reviewRouter= require('./routers/reviewRouter');
 const AppError = require('./utility/AppError');
 const errorHandler = require('./controllers/errorController');
 const rateLimit = require('express-rate-limit');
@@ -56,6 +57,7 @@ app.use((request,response,next)=>{
 //defining routes and the base url 
 app.use('/api/v1/users',userRouter); 
 app.use('/api/v1/tours',tourRouter); 
+app.use('/api/v1/reviews',reviewRouter);
 
 //handle all routes notfound
 app.all('*', (request,response,next) => {
