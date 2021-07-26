@@ -112,6 +112,12 @@ const tourSchema = new mongoose.Schema({
          ref: 'User'
         }
     ]
+    // reviews:[
+    //     {
+    //         type:mongoose.Schema.ObjectId,
+    //         ref:'Review'
+    //     }
+    // ]
 },
 {
     toJSON: {virtuals: true },
@@ -124,7 +130,13 @@ tourSchema.virtual('durationWeeks').get(function()
     return this.duration / 7
 });
 
-//chain moogoose middle ware
+tourSchema.virtual('reviews',{
+    ref:'Review',
+    foreignField: 'tour',
+    localField:'_id'
+});
+
+//chain moogoose middle ware 
 //pre or post, document, query, aggregate middle ware
 tourSchema.pre('save',function(next)
 {

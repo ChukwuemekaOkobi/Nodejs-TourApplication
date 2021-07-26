@@ -1,6 +1,7 @@
 const express = require('express'); 
 const controller = require('../controllers/toursController');
 const authController = require('../controllers/authController');
+const ReviewRouter = require('./reviewRouter');
 
 const router = express.Router(); 
 
@@ -47,6 +48,7 @@ function aliasTop5tours (request, response, next)
     next(); 
 }
 
+router.use('/:tourId/reviews',ReviewRouter);
 
 router.route('/get-top5-tours')
 .get(aliasTop5tours,controller.getTours);
@@ -66,6 +68,8 @@ router.route('/:id')
 .get(controller.getTour)
 .delete(authController.Authenticate, authController.Authorize('admin','lead-guide'),controller.deleteTour)
 .patch(controller.updateTour) 
+
+
 
 
 module.exports = router
