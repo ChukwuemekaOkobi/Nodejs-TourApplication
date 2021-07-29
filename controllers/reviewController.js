@@ -1,7 +1,32 @@
 const Review = require('../model/reviewModel');
-const {catchAsync} = require('../utility/utils');
-const AppError = require("../utility/appError");
+const factory = require("./handlerFactory");
 
+
+
+//middle ware
+function setTourUserId  (request, response, next){
+
+    if(!request.body.tour){
+        request.body.tour = request.params.tourId;
+    }
+
+    if(!request.body.user) {
+        request.body.user = request.user.id;
+    }
+
+    next();
+}
+
+const updateReview = factory.Update(Review);
+const deleteReview = factory.Delete(Review);
+const createReview = factory.Create(Review);
+const getReview = factory.GetItem(Review);
+const getAllReviews = factory.GetAll(Review);
+
+module.exports = {createReview, getAllReviews, getReview, deleteReview, updateReview, setTourUserId}
+
+
+/* 
 
 const getAllReviews = catchAsync(async function(request, response, next){
 
@@ -17,13 +42,10 @@ const getAllReviews = catchAsync(async function(request, response, next){
                 .json({
                     status:"success",
                     results: reviews.length, 
-                    data:{
-                        reviews
-                    }
+                    data: reviews
+                    
                 })
-});
-
-
+});s
 const getReview = catchAsync(async function(request, response, next){
     let filter = {"_id":request.params.id}
 
@@ -36,13 +58,11 @@ const getReview = catchAsync(async function(request, response, next){
     response.status(200)
             .json({
                 status:"success",
-                data:{
-                    review
-                }
+                data:review
+                
             })
 
 });
-
 const createReview  = catchAsync (async function(request, response, next){
     
     if(!request.body.tour){
@@ -66,5 +86,4 @@ const createReview  = catchAsync (async function(request, response, next){
     })
 
 });
-
-module.exports = {createReview, getAllReviews, getReview}
+*/

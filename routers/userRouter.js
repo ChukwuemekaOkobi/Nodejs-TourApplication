@@ -6,25 +6,31 @@ const router = express.Router();
 
 router.post('/register', authcontroller.Register);
 router.post('/login', authcontroller.Login);
-
 router.post('/forgotPassword', authcontroller.ForgotPassword);
 router.patch('/resetPassword/:token', authcontroller.ResetPassword);
-router.patch('/updatePassword', authcontroller.UpdatePassword);
 
+//authenticate all other itemss
+router.use(authcontroller.Authenticate);
+
+router.patch('/updatePassword',
+           authcontroller.UpdatePassword);
 
 router.route('/Profile')
-      .patch(authcontroller.Authenticate, controller.UpdateProfile);
+      .get(controller.GetProfile, controller.getUser)
+      .patch(controller.UpdateProfile)
+      .delete(controller.DeleteProfile);
 
 
+      //authorize routes
+router.use(authcontroller.Authorize('admin'));
 
-router.route('/') //home path of the different requests
-.get(controller.getUsers)
-.post(controller.addUser)
+router.route('/')
+      .get(controller.getUsers)
 
 router.route('/:id')
-.get(controller.getUser)
-.delete(controller.deleteUser)
-.patch(controller.updateUser) 
+      .get(controller.getUser)
+      .delete(controller.deleteUser)
+      .patch(controller.updateUser) 
 
 
 module.exports = router
