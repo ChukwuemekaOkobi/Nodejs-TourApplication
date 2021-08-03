@@ -30,6 +30,11 @@ router.route('/stats')
 router.route('/get-monthly-plan/:year')
 .get(authController.Authenticate,authController.Authorize('admin','lead-guide','guide'), controller.getMonthlyPlan);
 
+router.route('/tours-within/:distance/center/:latlng/unit/:unit')
+.get(controller.getToursWithin);
+
+router.route('/distances/:lating/unit/:unit')
+.get(controller.getDistances);
 router.route('/')
 .get(controller.getTours)
 .post(authController.Authenticate,authController.Authorize('admin','lead-guide'),controller.addTour); 

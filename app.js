@@ -15,8 +15,15 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean'); 
 const hpp = require('hpp');
+const { request } = require('express');
 
 const app =  express(); 
+
+app.set('view engine','pug');
+app.set('views', path.join(__dirname,'views'));
+
+
+app.use(express.static(path.join(__dirname,'public'))); //serve static files 
 
 if(process.env.NODE_ENV === 'development'){
     app.use(morgan('dev'));  //logging
@@ -29,11 +36,10 @@ const limiter = rateLimit({
 });
 
 //security 
-app.use(helmet());
+app.use(helmet()); //set security HTTP Headers
 app.use('/api',limiter); 
 
 app.use(express.json({limit:'10kb'})); // middleware to get request body
-app.use(express.static(path.join(__dirname,'./public'))); //serve static files 
 
 //Data sanitization no sql injection, cross site scripting
 app.use(mongoSanitize());
@@ -55,6 +61,12 @@ app.use((request,response,next)=>{
 });
 
 //defining routes and the base url 
+app.get('/',(request, response) => {
+
+    response.status(200).render('base');
+})
+
+//API routes
 app.use('/api/v1/users',userRouter); 
 app.use('/api/v1/tours',tourRouter); 
 app.use('/api/v1/reviews',reviewRouter);

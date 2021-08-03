@@ -7,13 +7,6 @@ const factory = require("./handlerFactory");
 
 
 
-//handles request for the list of tours
-const getTours  = factory.GetAll(Tour);
-
-
-
-
-
 
 const getTourStats = catchAsync (async function(request, response,next)
 {
@@ -106,6 +99,82 @@ async function getMonthlyPlan(request, response)
     }
 }
 
+
+const getToursWithin = catchAsync(async function(request, response, next) {
+
+    const {distance, latlng, unit} = req.params; 
+
+    const {lat,lng} = latlng.split(',');
+
+    if(!lat || !lng){
+     let error =   new AppError('please provide lat and long', 404); 
+
+     return next(error); 
+    }
+
+    let radius = unit === 'mi' ? distance/3963.2 : distance/6378.1
+
+    const tours = await Tour.find({
+         startLocation:{ $geoWithin: { $centerSphere:[ [lng,lat],radius]}}
+    })
+
+
+    res.status(200).json(
+        {
+            results: tours.length,
+            status:'success',
+            data:tours 
+        }
+    )
+}); 
+
+const getDistances = catchAsync(async function(request, response, next){
+    const {distance, latlng, unit} = req.params; 
+
+    const {lat,lng} = latlng.split(',');
+
+    if(!lat || !lng){
+     let error =   new AppError('please provide lat and long', 404); 
+
+     return next(error); 
+    }
+
+    let multiplier = unit === 'mi' ? 0.00062135 : 0.001;
+    const distances = await Tour.aggregate([
+        {
+            $geoNear: {
+                near:{
+                    type: 'Point',
+                    coordinates:[lng*1, lat *1]
+                },
+                distanceField: 'distance',
+                distanceMultiplier: multiplier
+            }
+        },
+        {
+            $project:{
+                distance:1, 
+                name: 1
+            }
+        }
+    
+
+    ])
+
+
+
+    res.status(200).json(
+        {
+            results: distances.length,
+            status:'success',
+            data:distances
+        }
+    )
+})
+
+
+//handles request for the list of tours
+const getTours  = factory.GetAll(Tour);
 //handles a single tour request
 const getTour =  factory.GetItem(Tour,{path:'reviews'});
 
@@ -117,7 +186,7 @@ const deleteTour = factory.Delete(Tour);
 
 
 
-module.exports = { getTours,addTour, getTour, updateTour, deleteTour, getTourStats, getMonthlyPlan};
+module.exports = { getToursWithin, getDistances, getTours,addTour, getTour, updateTour, deleteTour, getTourStats, getMonthlyPlan};
 
 
 /*  Older implementations 
