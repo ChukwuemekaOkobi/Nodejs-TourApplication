@@ -8,12 +8,16 @@
     "start": "set NODE_ENV=production && node server.js",
     "prod": "set NODE_ENV=production && nodemon server.js",
     "dev": "nodemon server.js",
-    "debug": "ndb server.js"
+    "debug": "ndb server.js",
+    "watch.js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js",
+    "build.js": "parcel watch ./public/js/index.js --out-dir ./public/js --out-file bundle.js"
   },
   "author": "Chukwuemeka OKOBI",
   "license": "ISC",
   "dependencies": {
+    "@babel/polyfill": "^7.12.1",
     "bcrypt": "^5.0.1",
+    "cookie-parser": "^1.4.5",
     "dotenv": "^8.2.0",
     "express": "^4.17.1",
     "express-mongo-sanitize": "^2.1.0",
@@ -23,6 +27,7 @@
     "jsonwebtoken": "^8.5.1",
     "mongoose": "^5.11.13",
     "morgan": "^1.10.0",
+    "multer": "^1.4.2",
     "ndb": "^1.1.5",
     "nodemailer": "^6.6.3",
     "nodemon": "^2.0.7",
@@ -30,5 +35,8 @@
     "slugify": "^1.4.6",
     "validator": "^13.5.2",
     "xss-clean": "^0.1.1"
+  },
+  "devDependencies": {
+    "parcel-bundler": "^1.12.5"
   }
 }

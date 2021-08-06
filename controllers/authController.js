@@ -5,7 +5,7 @@ const util = require('util');
 const AppError = require('../utility/appError');
 const {sendEmail} = require('../utility/email');
 const crypto = require('crypto');
-const { model } = require('mongoose');
+
 
 
 
@@ -16,6 +16,10 @@ const Authenticate = catchAsync(async function (request, response, next) {
     if(auth && auth.startsWith('Bearer'))
     {
         token  = auth.split(' ')[1]; 
+    }
+    else if(request.cookies.token)
+    {
+        token = request.cookies.token;
     }
 
     if(!token) {
@@ -40,8 +44,41 @@ const Authenticate = catchAsync(async function (request, response, next) {
     }
 
     request.user = user;
+    response.locals.user = user;
     next();
 });
+
+
+const IsLoggedIn = async function (request, response, next) {
+ 
+    try{
+        var token = request.cookies.token;
+
+        if(token) {
+            const Valid = await util.promisify(jwt.verify)(token, process.env.JWT_SECRET);
+
+            let user = await User.findById(Valid.id);
+
+            if(!user){
+            
+            return  next();
+            }
+
+            if(user.changedPasswordAfter(Valid.iat))
+            {
+                return  next();
+            }
+
+            response.locals.user = user;
+            return next();
+      }
+    }catch{
+        return next();
+    }
+
+next();
+
+}
 
 const Authorize = (...roles) => {
 
@@ -113,6 +150,8 @@ const Register = catchAsync(async function(request, response, next) {
 
 const Login = catchAsync(async function (request, response, next){
   
+    console.log(request.body)
+
      let {email, password} =  request.body; 
 
      if(!email || !password){
@@ -120,14 +159,19 @@ const Login = catchAsync(async function (request, response, next){
         let error = new AppError('email and password required',400);
         return next(error);
      }
+    
 
      let user = await User.findOne({'email':email})
                            .select('+password');
 
+     if(!user){
+        let error = new AppError('invalid credentials',401);
+        return next(error);
+     }
 
      let isPassword = await user.correctPassword(password,user.password);
 
-     if(!user || !isPassword){
+     if(!isPassword){
         let error = new AppError('invalid credentials',401);
         return next(error);
      }
@@ -135,7 +179,17 @@ const Login = catchAsync(async function (request, response, next){
      createSendToken(user,200,response);
 });
 
+const logout = (request, response) => {
 
+    console.log("right now")
+    response.cookie('token','loggedout',{
+        expires: new Date(Date.now() + 10 * 1000),
+        httpOnly: true
+    });
+
+    response.status(200)
+    .json({status:'success'});
+}
 const ForgotPassword = catchAsync( async function (request, response, next){
 
     let model = request.body; 
@@ -244,4 +298,4 @@ const UpdatePassword = catchAsync(async function (request,response,next){
 
 
 
-module.exports = {Register, Login, Authenticate, Authorize, ForgotPassword, ResetPassword, UpdatePassword}
+module.exports = {Register, logout, IsLoggedIn, Login, Authenticate, Authorize, ForgotPassword, ResetPassword, UpdatePassword}

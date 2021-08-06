@@ -17,11 +17,13 @@ function getUsersModel()
 
 function filterObj(obj, ...fields){
 
+
     let newObj = {};
-    Objects.keys(obj).forEach(el => {
+    Object.keys(obj).forEach(el => {
         if(fields.includes(el))
         {
           newObj[el] = obj[el];
+     
         }
     })
 
@@ -38,7 +40,10 @@ const GetProfile = (request, response, next) => {
 
 const UpdateProfile = catchAsync(async function(request, response, next){
  
+
     var model = filterObj(request.body, 'name','email');
+
+    console.log(model)
 
     if(model.password || model.passwordConfirm){
         let error = new AppError('improper route for password', 400); 

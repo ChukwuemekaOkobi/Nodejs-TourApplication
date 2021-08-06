@@ -1,3 +1,4 @@
+const { request } = require('express');
 const AppError = require('../utility/appError');
 
 function handleCastErrorDB(err){
@@ -27,37 +28,55 @@ function handleJWTError(err)
     return new AppError('invalid  token, Login again', 401);
 }
 
-function SendErrorDev (err, response)
+function SendErrorDev (err, request, response)
 {
-    response.status(err.statusCode)
-    .json({
-        status:err.status,
-        message:err.message, 
-        statusCode:err.statusCode,
-        error:err,
-        stack:err.stack
-    })
-}
-
-function SendErrorProd(err, response)
-{
-    if(err.isOperational){
+    if(request.originalUrl.startsWith('/api')){
         response.status(err.statusCode)
         .json({
             status:err.status,
             message:err.message, 
-            statusCode: err.statusCode
+            statusCode:err.statusCode,
+            error:err,
+            stack:err.stack
         })
     }
     else{
-
-        response.status(500)
-        .json({
-            status:'error',
-            messsage:'something went wrong',
-            statusCode:500
-        })
+        response.status(err.statusCode).render('error',{
+            title:'Something went wrong',
+            msg: err.message
+        });
     }
+
+}
+
+function SendErrorProd(err, request,response)
+{
+    if(request.originalUrl.startsWith('/api')){
+        if(err.isOperational){
+            response.status(err.statusCode)
+            .json({
+                status:err.status,
+                message:err.message, 
+                statusCode: err.statusCode
+            })
+        }
+        else{
+
+            response.status(500)
+            .json({
+                status:'error',
+                messsage:'something went wrong',
+                statusCode:500
+            })
+        }
+
+   } else{
+
+            response.status(err.statusCode).render('error',{
+                title:'Something went wrong',
+                msg: err.message
+            });
+   }
 }
 
 
@@ -72,7 +91,7 @@ const handler = (err, request, response, next) => {
 
     if(env ==="development")
     {
-        SendErrorDev(err,response);
+        SendErrorDev(err, request, response);
         return;
     }
     else if(env === "production")
@@ -94,7 +113,7 @@ const handler = (err, request, response, next) => {
         if(error.name === 'JsonWebTokenError' || error.name === 'TokenExpiredError'){
             error = handleJWTError(err);
         }
-        SendErrorProd(error,response);
+        SendErrorProd(error,request,response);
         return;
     }
     

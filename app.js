@@ -8,6 +8,7 @@ const path = require('path');
 const userRouter = require('./routers/userRouter')
 const tourRouter = require('./routers/tourRouter');
 const reviewRouter= require('./routers/reviewRouter');
+const viewRouter = require('./routers/viewRouter');
 const AppError = require('./utility/AppError');
 const errorHandler = require('./controllers/errorController');
 const rateLimit = require('express-rate-limit');
@@ -15,7 +16,7 @@ const helmet = require('helmet');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean'); 
 const hpp = require('hpp');
-const { request } = require('express');
+const cookieParser = require('cookie-parser')
 
 const app =  express(); 
 
@@ -40,6 +41,8 @@ app.use(helmet()); //set security HTTP Headers
 app.use('/api',limiter); 
 
 app.use(express.json({limit:'10kb'})); // middleware to get request body
+app.use(express.urlencoded({extended:true, limit:'10kb'}))
+app.use(cookieParser());
 
 //Data sanitization no sql injection, cross site scripting
 app.use(mongoSanitize());
@@ -55,17 +58,12 @@ app.use(hpp({
 app.use((request,response,next)=>{
 
     request.requestTime = new Date().toISOString();
-
    // console.log(request.headers);
    next(); 
 });
 
 //defining routes and the base url 
-app.get('/',(request, response) => {
-
-    response.status(200).render('base');
-})
-
+app.use('/', viewRouter);
 //API routes
 app.use('/api/v1/users',userRouter); 
 app.use('/api/v1/tours',tourRouter); 

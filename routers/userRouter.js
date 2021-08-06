@@ -6,11 +6,14 @@ const router = express.Router();
 
 router.post('/register', authcontroller.Register);
 router.post('/login', authcontroller.Login);
+router.get('/logout', authcontroller.logout);
 router.post('/forgotPassword', authcontroller.ForgotPassword);
 router.patch('/resetPassword/:token', authcontroller.ResetPassword);
 
+
 //authenticate all other itemss
 router.use(authcontroller.Authenticate);
+
 
 router.patch('/updatePassword',
            authcontroller.UpdatePassword);
