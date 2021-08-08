@@ -2,6 +2,8 @@ const express = require('express');
 const controller = require('../controllers/userController');
 const authcontroller = require('../controllers/authController');
 
+
+
 const router = express.Router(); 
 
 router.post('/register', authcontroller.Register);
@@ -20,7 +22,7 @@ router.patch('/updatePassword',
 
 router.route('/Profile')
       .get(controller.GetProfile, controller.getUser)
-      .patch(controller.UpdateProfile)
+      .patch(controller.uploadUserPhoto,controller.resizeImage,controller.UpdateProfile)
       .delete(controller.DeleteProfile);
 
 

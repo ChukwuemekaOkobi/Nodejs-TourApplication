@@ -6066,52 +6066,62 @@ function updateData(_x, _x2) {
 
 function _updateData() {
   _updateData = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(data, type) {
-    var url, res, response;
+    var url, header, payload, res, response;
     return regeneratorRuntime.wrap(function _callee$(_context) {
       while (1) {
         switch (_context.prev = _context.next) {
           case 0:
             _context.prev = 0;
             url = 'http://localhost:5000/api/v1/users/';
-            url = type === 'data' ? url + 'profile' : url + 'updatePassword';
-            _context.next = 5;
+            header = {};
+            payload = data;
+
+            if (type !== 'data') {
+              url = url + 'updatePassword';
+              header = {
+                "Content-Type": 'application/json'
+              };
+              payload = JSON.stringify(data);
+            } else {
+              url = url + 'profile';
+            }
+
+            _context.next = 7;
             return fetch(url, {
               method: "PATCH",
-              headers: {
-                Accept: "application/json",
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify(data)
+              headers: header,
+              body: payload
             });
 
-          case 5:
+          case 7:
             res = _context.sent;
-            _context.next = 8;
+            _context.next = 10;
             return res.json();
 
-          case 8:
+          case 10:
             response = _context.sent;
 
             if (res.ok) {
               (0, _alert.showAlert)('success', ' update Successful');
             } else {
+              console.log(response);
               (0, _alert.showAlert)('error', 'update failed');
             }
 
-            _context.next = 15;
+            _context.next = 17;
             break;
 
-          case 12:
-            _context.prev = 12;
+          case 14:
+            _context.prev = 14;
             _context.t0 = _context["catch"](0);
-            (0, _alert.showAlert)('error', _context.t0.message);
+            (0, _alert.showAlert)('error', _context.t0.message, " dsfa");
 
-          case 15:
+          case 17:
           case "end":
             return _context.stop();
         }
       }
-    }, _callee, null, [[0, 12]]);
+    }, _callee, null, [[0, 14]]);
   }));
   return _updateData.apply(this, arguments);
 }
@@ -7189,7 +7199,7 @@ var submitData = document.querySelector('#userdataform');
 if (submitData) {
   submitData.addEventListener('submit', /*#__PURE__*/function () {
     var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(e) {
-      var email, name, data;
+      var email, name, photo, form;
       return regeneratorRuntime.wrap(function _callee2$(_context2) {
         while (1) {
           switch (_context2.prev = _context2.next) {
@@ -7197,14 +7207,15 @@ if (submitData) {
               e.preventDefault();
               email = document.querySelector('#emaildata').value;
               name = document.querySelector('#namedata').value;
-              data = {
-                email: email,
-                name: name
-              };
-              _context2.next = 6;
-              return (0, _updateSettings.updateData)(data, 'data');
+              photo = document.querySelector('#photo').files[0];
+              form = new FormData();
+              form.append('name', name);
+              form.append('email', email);
+              form.append('photo', photo);
+              _context2.next = 10;
+              return (0, _updateSettings.updateData)(form, 'data');
 
-            case 6:
+            case 10:
             case "end":
               return _context2.stop();
           }

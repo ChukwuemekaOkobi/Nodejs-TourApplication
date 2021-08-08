@@ -34,17 +34,18 @@ if(submitData){
 
     submitData.addEventListener('submit', async e=> {
         e.preventDefault(); 
-
-       
         let email = document.querySelector('#emaildata').value; 
-        
         let name = document.querySelector('#namedata').value;
+        let photo = document.querySelector('#photo').files[0];
 
-        var data = {
-            email, 
-            name
-        }
-        await updateData(data,'data');
+
+        let form = new FormData(); 
+        form.append('name', name); 
+        form.append('email',email);
+        form.append('photo',photo);
+
+
+        await updateData(form,'data');
     
     })
 }

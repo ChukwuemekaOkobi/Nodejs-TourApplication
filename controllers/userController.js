@@ -2,18 +2,68 @@ const fs = require('fs');
 const path = require('path'); 
 const utils = require('../utility/utils');
 const {catchAsync} = require ("../utility/utils");
-
+const multer = require('multer');
 const User = require('../model/userModel');
 const AppError = require('../utility/appError');
 const factory = require('./handlerFactory');
+const sharp = require('sharp');
+
+//save to disk
+// const multerStorage = multer.diskStorage({
+//     destination:(request, file, cb)=> {
+//         cb(null, 'public/img/users');
+//     },
+//     filename: (request, file, cb) =>{
+//         const ext = file.mimetype.split('/')[1];
+
+//         cb(null,`user-${request.user.id}-${Date.now()}.${ext}`)
+//     }
+// })
+
+// function getUsersModel()
+// {
+//     let tours = fs.readFileSync(path.join(__dirname, '../resource/data/tours-simple.json'),'utf-8'); 
+
+//     return JSON.parse(tours); 
+// }
 
 
-function getUsersModel()
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => 
 {
-    let tours = fs.readFileSync(path.join(__dirname, '../resource/data/tours-simple.json'),'utf-8'); 
-
-    return JSON.parse(tours); 
+    if(file.mimetype.startsWith('image')) {
+        cb(null, true);
+    }
+    else{
+        cb( new AppError('Not an image, Image needed', 400),false);
+    }
 }
+
+const upload = multer({
+    storage: multerStorage, 
+    fileFilter: multerFilter
+});
+
+const resizeImage = catchAsync(async function (request, response, next) {
+  if(!request.file){
+      return next();
+  }
+ 
+  request.file.filename = `user-${request.user.id}-${Date.now()}.jpeg`;
+
+  sharp(request.file.buffer)
+  .resize(500,500)
+  .toFormat('jpeg')
+  .jpeg({quality:90})
+  .toFile(`public/img/users/${request.file.filename}`);
+
+  next();
+
+})
+
+const uploadUserPhoto = upload.single('photo');
+
 
 function filterObj(obj, ...fields){
 
@@ -43,7 +93,8 @@ const UpdateProfile = catchAsync(async function(request, response, next){
 
     var model = filterObj(request.body, 'name','email');
 
-    console.log(model)
+    if(request.file) 
+      model.photo = request.file.filename; 
 
     if(model.password || model.passwordConfirm){
         let error = new AppError('improper route for password', 400); 
@@ -81,8 +132,6 @@ const DeleteProfile = catchAsync(async function (request, response, next){
 
 
 
-
-
 const getUsers = factory.GetAll(User);
 
 const getUser = factory.GetItem(User);
@@ -93,7 +142,7 @@ const updateUser = factory.Update(User);
 const deleteUser = factory.Delete(User);
 
 
-module.exports = { getUsers, getUser, updateUser, deleteUser, DeleteProfile, UpdateProfile, GetProfile}; 
+module.exports = { getUsers, getUser, updateUser,resizeImage, uploadUserPhoto, deleteUser, DeleteProfile, UpdateProfile, GetProfile}; 
 
 
 /*
