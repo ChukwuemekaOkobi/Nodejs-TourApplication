@@ -1,1 +1,1 @@
-Tour application implemented using Node JS and MongoDB 
+Tour management application implemented using Node JS and MongoDB 

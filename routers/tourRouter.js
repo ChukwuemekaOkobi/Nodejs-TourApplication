@@ -43,7 +43,11 @@ router.route('/')
 router.route('/:id')
 .get(controller.getTour)
 .delete(authController.Authenticate, authController.Authorize('admin','lead-guide'),controller.deleteTour)
-.patch(authController.Authenticate, authController.Authorize('admin','lead-guide'),controller.updateTour) 
+.patch(authController.Authenticate, 
+       authController.Authorize('admin','lead-guide'),
+       controller.UploadTourImages,
+       controller.resizeImages,
+       controller.updateTour) 
 
 
 

@@ -3,7 +3,7 @@ const {catchAsync} = require ("../utility/utils");
 const jwt = require('jsonwebtoken'); 
 const util = require('util');
 const AppError = require('../utility/appError');
-const {sendEmail} = require('../utility/email');
+const Email = require('../utility/email');
 const crypto = require('crypto');
 
 
@@ -143,6 +143,8 @@ const Register = catchAsync(async function(request, response, next) {
         role:user.role
     });
 
+    const url = `${request.protocol}://${request.get('host')}/profile`; 
+    await new Email(newUser,url).sendWelcome();
 
     createSendToken(newUser,201,response);
 
@@ -209,14 +211,9 @@ const ForgotPassword = catchAsync( async function (request, response, next){
 
     const resetURL = `${request.protocol}://${request.get('host')}/api/v1/users/resetPassword/${resetToken}`;
 
-    const message = `Forgot password? Submit click on the link ${resetURL}`;
-
    try{
-    await sendEmail({
-            email:user.email, 
-            subject: 'Your password reset token', 
-            message
-        })
+ 
+    await new Email(user, resetURL).sendPasswordReset();
 
         response.status(200)
         .json ({

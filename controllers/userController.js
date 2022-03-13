@@ -52,7 +52,7 @@ const resizeImage = catchAsync(async function (request, response, next) {
  
   request.file.filename = `user-${request.user.id}-${Date.now()}.jpeg`;
 
-  sharp(request.file.buffer)
+  await sharp(request.file.buffer)
   .resize(500,500)
   .toFormat('jpeg')
   .jpeg({quality:90})

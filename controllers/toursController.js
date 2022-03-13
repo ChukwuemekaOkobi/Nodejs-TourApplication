@@ -1,11 +1,68 @@
 const Tour = require('../model/tourModel');
 const {catchAsync} = require ("../utility/utils");
 const AppError = require("../utility/appError");
+const multer = require("multer")
+const sharp = require('sharp');
 
 const factory = require("./handlerFactory");
+ 
+
+const multerStorage = multer.memoryStorage();
+
+const multerFilter = (req, file, cb) => 
+{
+    if(file.mimetype.startsWith('image')) {
+        cb(null, true);
+    }
+    else{
+        cb( new AppError('Not an image, Image needed', 400),false);
+    }
+}
+
+const upload = multer({
+    storage: multerStorage, 
+    fileFilter: multerFilter
+});
+
+const resizeImages = catchAsync(async function (request, response, next) {
+  if(!request.files){
+      return next();
+  }
+ 
+  request.body.imageCover= `tour-${request.params.id}-${Date.now()}-cover.jpeg`;
+
+await sharp(request.files.imageCover[0].buffer)
+  .resize(2000,1333)
+  .toFormat('jpeg')
+  .jpeg({quality:90})
+  .toFile(`public/img/tours/${request.body.imageCover}`);
 
 
+  request.body.images = [];
+  
+  await Promise.all(request.files.images.map(async (element,i) => {
+      
+    const filename =  `tour-${request.params.id}-${Date.now()}-${i+1}.jpeg`;
 
+    await sharp(element.buffer)
+        .resize(2000,1333)
+        .toFormat('jpeg')
+        .jpeg({quality:90})
+        .toFile(`public/img/tours/${file}`);
+
+        request.body.images.push(filename);
+
+  }));
+
+  next();
+
+})
+
+
+const UploadTourImages = upload.fields([
+    {name: 'imageCover', maxCount:1}, 
+    {name:'images', maxCount:3}
+]);
 
 
 const getTourStats = catchAsync (async function(request, response,next)
@@ -186,7 +243,7 @@ const deleteTour = factory.Delete(Tour);
 
 
 
-module.exports = { getToursWithin, getDistances, getTours,addTour, getTour, updateTour, deleteTour, getTourStats, getMonthlyPlan};
+module.exports = { UploadTourImages, resizeImages, getToursWithin, getDistances, getTours,addTour, getTour, updateTour, deleteTour, getTourStats, getMonthlyPlan};
 
 
 /*  Older implementations 
